@@ -241,7 +241,6 @@ async function init() {
   await app.init({
     backgroundColor: 0x0a0a12,
     antialias: true,
-    resizeTo: starPane,
   });
 
   starPane.appendChild(app.canvas);
@@ -329,9 +328,19 @@ async function init() {
     }
   };
 
-  app.renderer.on('resize', redraw);
   updateHud();
   redraw();
+
+  const resizeRendererToPane = () => {
+    const width = Math.max(1, Math.floor(starPane.clientWidth));
+    const height = Math.max(1, Math.floor(starPane.clientHeight));
+    app.renderer.resize(width, height);
+    redraw();
+  };
+
+  const resizeObserver = new ResizeObserver(resizeRendererToPane);
+  resizeObserver.observe(starPane);
+  resizeRendererToPane();
 }
 
 init();
