@@ -1,24 +1,32 @@
-import './style.css'
-import typescriptLogo from './typescript.svg'
-import viteLogo from '/vite.svg'
-import { setupCounter } from './counter.ts'
+import './style.css';
+import { Application, Graphics } from 'pixi.js';
 
-document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
-  <div>
-    <a href="https://vite.dev" target="_blank">
-      <img src="${viteLogo}" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://www.typescriptlang.org/" target="_blank">
-      <img src="${typescriptLogo}" class="logo vanilla" alt="TypeScript logo" />
-    </a>
-    <h1>Vite + TypeScript</h1>
-    <div class="card">
-      <button id="counter" type="button"></button>
-    </div>
-    <p class="read-the-docs">
-      Click on the Vite and TypeScript logos to learn more
-    </p>
-  </div>
-`
+const STAR_COUNT = 200;
+const STAR_COLOR = 0xffffff;
 
-setupCounter(document.querySelector<HTMLButtonElement>('#counter')!)
+async function init() {
+  const app = new Application();
+  await app.init({
+    width: window.innerWidth,
+    height: window.innerHeight,
+    backgroundColor: 0x0a0a12,
+    antialias: true,
+    resizeTo: window,
+  });
+
+  const stars = new Graphics();
+  for (let i = 0; i < STAR_COUNT; i++) {
+    stars
+      .circle(
+        Math.random() * app.screen.width,
+        Math.random() * app.screen.height,
+        1
+      )
+      .fill(STAR_COLOR);
+  }
+  app.stage.addChild(stars);
+
+  document.body.appendChild(app.canvas);
+}
+
+init();
