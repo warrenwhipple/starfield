@@ -1,4 +1,5 @@
 import './style.css';
+import { SimulationClock, createTravelEvent, type SimulationEvent } from './des';
 import {
   Application,
   Circle,
@@ -28,12 +29,19 @@ type HudElements = {
   title: HTMLHeadingElement;
   subtitle: HTMLParagraphElement;
   details: HTMLParagraphElement;
+  engineSummary: HTMLParagraphElement;
+  engineDetails: HTMLParagraphElement;
 };
 
 type LayoutElements = {
   starPane: HTMLDivElement;
   hudPane: HTMLDivElement;
 };
+
+type DemoEvent = SimulationEvent<
+  'instruction-arrival' | 'probe-arrival' | 'missile-arrival',
+  { route: string }
+>;
 
 const STARS: StarDefinition[] = [
   { id: 'sol', name: 'Sol', nx: 0.08, ny: 0.2, buildRate: 1.3, color: 0xfff7c9 },
@@ -202,13 +210,80 @@ function createLayout(): LayoutElements {
   return { starPane, hudPane };
 }
 
+function createEnginePreview(stars: StarDefinition[]) {
+  const starsById = new Map(stars.map((star) => [star.id, star]));
+  const clock = new SimulationClock<DemoEvent>();
+  const plan = [
+    {
+      id: 'demo-instruction-sol-orion',
+      type: 'instruction-arrival' as const,
+      from: 'sol',
+      to: 'orion',
+      timeOrigin: 0,
+      speed: 1,
+      route: 'Sol -> Orion',
+    },
+    {
+      id: 'demo-probe-lyra-canopus',
+      type: 'probe-arrival' as const,
+      from: 'lyra',
+      to: 'canopus',
+      timeOrigin: 0.5,
+      speed: 0.8,
+      route: 'Lyra -> Canopus',
+    },
+    {
+      id: 'demo-missile-vega-draco',
+      type: 'missile-arrival' as const,
+      from: 'vega',
+      to: 'draco',
+      timeOrigin: 0.2,
+      speed: 1.35,
+      route: 'Vega -> Draco',
+    },
+  ];
+
+  for (const step of plan) {
+    const origin = starsById.get(step.from);
+    const destination = starsById.get(step.to);
+    if (!origin || !destination) {
+      throw new Error(`Missing demo star for route ${step.route}.`);
+    }
+
+    clock.schedule(
+      createTravelEvent({
+        id: step.id,
+        type: step.type,
+        origin: { x: origin.nx, y: origin.ny },
+        destination: { x: destination.nx, y: destination.ny },
+        timeOrigin: step.timeOrigin,
+        speed: step.speed,
+        payload: { route: step.route },
+      })
+    );
+  }
+
+  return clock;
+}
+
+function formatEnginePreview(clock: SimulationClock<DemoEvent>) {
+  const nextEvent = clock.peekNextEvent();
+
+  return {
+    summary: `DES preview: paused at t=${clock.time.toFixed(2)} with ${clock.pendingEventCount} queued events`,
+    details: nextEvent
+      ? `Next event: ${nextEvent.type} ${nextEvent.payload.route} @ t=${nextEvent.timeArrival.toFixed(2)}`
+      : 'Next event: none queued',
+  };
+}
+
 function createHud(totalStars: number, parent: HTMLElement): HudElements {
   const panel = document.createElement('aside');
   panel.className = 'star-panel';
 
   const heading = document.createElement('p');
   heading.className = 'star-panel__heading';
-  heading.textContent = `Step 2: Stars with names (${totalStars})`;
+  heading.textContent = `Step 3: DES engine (${totalStars} stars)`;
 
   const title = document.createElement('h2');
   title.className = 'star-panel__title';
@@ -219,10 +294,16 @@ function createHud(totalStars: number, parent: HTMLElement): HudElements {
   const details = document.createElement('p');
   details.className = 'star-panel__details';
 
-  panel.append(heading, title, subtitle, details);
+  const engineSummary = document.createElement('p');
+  engineSummary.className = 'star-panel__engine-summary';
+
+  const engineDetails = document.createElement('p');
+  engineDetails.className = 'star-panel__engine-details';
+
+  panel.append(heading, title, subtitle, details, engineSummary, engineDetails);
   parent.appendChild(panel);
 
-  return { title, subtitle, details };
+  return { title, subtitle, details, engineSummary, engineDetails };
 }
 
 function getStarPosition(star: StarDefinition, width: number, height: number) {
@@ -236,6 +317,7 @@ function getStarPosition(star: StarDefinition, width: number, height: number) {
 
 async function init() {
   const { starPane, hudPane } = createLayout();
+  const enginePreview = createEnginePreview(STARS);
 
   const app = new Application();
   await app.init({
@@ -278,6 +360,10 @@ async function init() {
   });
 
   const updateHud = () => {
+    const engineState = formatEnginePreview(enginePreview);
+    hud.engineSummary.textContent = engineState.summary;
+    hud.engineDetails.textContent = engineState.details;
+
     const selected = STARS.find((star) => star.id === selectedStarId);
     if (!selected) {
       hud.title.textContent = 'No star selected';
