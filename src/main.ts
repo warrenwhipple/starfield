@@ -30,6 +30,11 @@ type HudElements = {
   details: HTMLParagraphElement;
 };
 
+type LayoutElements = {
+  starPane: HTMLDivElement;
+  hudPane: HTMLDivElement;
+};
+
 const STARS: StarDefinition[] = [
   { id: 'sol', name: 'Sol', nx: 0.08, ny: 0.2, buildRate: 1.3, color: 0xfff7c9 },
   {
@@ -181,7 +186,23 @@ const backgroundPoints: BackgroundPoint[] = Array.from(
   })
 );
 
-function createHud(totalStars: number): HudElements {
+function createLayout(): LayoutElements {
+  const shell = document.createElement('div');
+  shell.className = 'app-shell';
+
+  const starPane = document.createElement('div');
+  starPane.className = 'star-pane';
+
+  const hudPane = document.createElement('div');
+  hudPane.className = 'hud-pane';
+
+  shell.append(starPane, hudPane);
+  document.body.appendChild(shell);
+
+  return { starPane, hudPane };
+}
+
+function createHud(totalStars: number, parent: HTMLElement): HudElements {
   const panel = document.createElement('aside');
   panel.className = 'star-panel';
 
@@ -199,7 +220,7 @@ function createHud(totalStars: number): HudElements {
   details.className = 'star-panel__details';
 
   panel.append(heading, title, subtitle, details);
-  document.body.appendChild(panel);
+  parent.appendChild(panel);
 
   return { title, subtitle, details };
 }
@@ -214,16 +235,18 @@ function getStarPosition(star: StarDefinition, width: number, height: number) {
 }
 
 async function init() {
+  const { starPane, hudPane } = createLayout();
+
   const app = new Application();
   await app.init({
     backgroundColor: 0x0a0a12,
     antialias: true,
-    resizeTo: window,
+    resizeTo: starPane,
   });
 
-  document.body.appendChild(app.canvas);
+  starPane.appendChild(app.canvas);
 
-  const hud = createHud(STARS.length);
+  const hud = createHud(STARS.length, hudPane);
   const backgroundLayer = new Graphics();
   const starsLayer = new Container();
   app.stage.addChild(backgroundLayer);
@@ -306,7 +329,7 @@ async function init() {
     }
   };
 
-  window.addEventListener('resize', redraw);
+  app.renderer.on('resize', redraw);
   updateHud();
   redraw();
 }
