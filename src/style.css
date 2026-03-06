@@ -74,6 +74,20 @@ canvas {
   color: #a6b7d6;
 }
 
+.star-panel__engine-summary {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(163, 192, 255, 0.18);
+  font-size: 13px;
+  color: #d6e4ff;
+}
+
+.star-panel__engine-details {
+  margin-top: 6px;
+  font-size: 13px;
+  color: #8fa7d8;
+}
+
 @media (max-width: 768px) {
   .app-shell {
     grid-template-columns: 1fr;
