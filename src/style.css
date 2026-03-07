@@ -30,6 +30,8 @@ body {
 }
 
 .hud-pane {
+  min-width: 0;
+  min-height: 0;
   border-left: 1px solid rgba(163, 192, 255, 0.2);
   background: rgba(6, 12, 24, 0.82);
   padding: 16px;
@@ -44,6 +46,7 @@ canvas {
 
 .star-panel {
   height: 100%;
+  min-height: 0;
   border: 1px solid rgba(163, 192, 255, 0.22);
   border-radius: 14px;
   background: rgba(7, 13, 28, 0.78);
@@ -179,16 +182,9 @@ canvas {
 }
 
 @media (max-width: 768px) {
-  .app-shell {
-    grid-template-columns: 1fr;
-    grid-template-rows: minmax(0, 1fr) auto;
-  }
-
   .hud-pane {
-    border-left: none;
-    border-top: 1px solid rgba(163, 192, 255, 0.22);
-    padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 0px));
-    background: rgba(6, 12, 24, 0.92);
+    overflow-y: auto;
+    overscroll-behavior: contain;
   }
 
   .star-panel {
@@ -206,8 +202,53 @@ canvas {
   .star-panel__title {
     font-size: 20px;
   }
+}
+
+@media (hover: none) and (pointer: coarse) and (orientation: portrait) {
+  .app-shell {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(0, 1fr) fit-content(50dvh);
+  }
+
+  .hud-pane {
+    max-height: 50dvh;
+    border-left: none;
+    border-top: 1px solid rgba(163, 192, 255, 0.22);
+    padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 0px));
+    background: rgba(6, 12, 24, 0.92);
+  }
 
   .star-panel__controls {
     grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (hover: none) and (pointer: coarse) and (orientation: landscape) and (max-height: 600px) {
+  .app-shell {
+    grid-template-columns: minmax(0, 1fr) clamp(240px, 40vw, 320px);
+    grid-template-rows: minmax(0, 1fr);
+  }
+
+  .hud-pane {
+    max-height: none;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border-top: none;
+    border-left: 1px solid rgba(163, 192, 255, 0.22);
+    padding: 10px max(12px, env(safe-area-inset-right, 0px)) 10px 12px;
+    background: rgba(6, 12, 24, 0.92);
+  }
+
+  .star-panel {
+    height: 100%;
+    border: 1px solid rgba(163, 192, 255, 0.22);
+    border-radius: 14px;
+    background: rgba(7, 13, 28, 0.78);
+    backdrop-filter: blur(10px);
+    padding: 12px 14px;
+  }
+
+  .star-panel__controls {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
